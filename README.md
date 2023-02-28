@@ -1,6 +1,6 @@
 # memalloc
 
-#### Why does it exist?
+## Why does it exist?
 `memalloc` is a primitive dynamic memory allocator, that I've written simply to learn how can one implement something with resembling functionality of the `malloc` et al. from standard library.
 
 ## Description
@@ -11,14 +11,14 @@ The memory in the heap is represented as a sequence of consecutive blocks each e
 ```
 ...[header:[size;free]][memory-region][footer:[size]]...
 ```
-##### Structure of Metadata
+### Structure of Metadata
 - `header` consists of
   - the `size` of `memory-region`
   - and, a `free`-flag that tells whether the block is free or not
 - `footer` contains identical `size` value as the `header` from the same block
 
 
-##### Blocks List Organization
+### Blocks List Organization
 Blocks are linked implicitly to each other. That means that there isn't any pointer fields to next and previous blocks of memory, their addresses must be computed arithmetically, depending on the values stored in `size` field of either the `header` or `footer`, e.g. in order to get next block, given some Header pointer `h` you need to make roughly the following:
 ```C
 void* prev = (void*)h + (sizeof(Header) + h->size + sizeof(Footer))
@@ -29,7 +29,7 @@ i.e skip the current `header`, skip memory region, and then the `footer`. After 
 
 The consequence of implicit linking is that you cannot use that memory allocator together with anything that may interfere with the heap and break contiguity of the blocks, which will lead to wrong pointer arithmetic and, thus, will break implicit linkage of the blocks.
 
-##### Pointer Arithmetic Macros
+### Pointer Arithmetic Macros
 All pointer operations are "abstracted" using macros:
   - `header2footer(h)` - given valid `Header*` computes `void*` to the `Footer` of the same block
 ```
@@ -83,7 +83,7 @@ f     - footer
 m     - memory region
 ```
 
-##### memalloc
+### memalloc
 The `memalloc` aligns requested size, and tries to find the first free block of sufficient volume.
   - If the block wasn't found, then
     - at least one page of memory is allocated by `sbrk`, and
@@ -100,13 +100,13 @@ Then if the found block size is
       - the pointer to the requested memory region is returned
     - if the remainder wouldn't have enough space, then the whole block space is occupied
 
-##### memfree
+### memfree
 The `memfree` function
   - finds next and previous blocks
   - checks whether they are not `NULL` and are `free` blocks
   - joins the block being freed with its neighbours depending on the above observations
 
-##### memrealloc
+### memrealloc
 The `memrealloc` function appeared to be much more complicated than I've imagined at first, because of different corner cases that must be taken into account.
 
 Firstly the `memrealloc` function deals with a degenerate input:
@@ -138,16 +138,16 @@ If the request size is greater than the size of current block, then there is fou
 
 Pointer to reallocated memory segment is returned.
 
-##### cmemalloc
+### cmemalloc
 Does the same that `memalloc`, but initializes the memory segment with zeroes.
 
-##### memcopy
+### memcopy
 
 There is also a supplementary `memcopy` function that runs in two steps
   - first it copies `src` to `dst` by eight-byte chunks, and then 
   - it copies the remaining data byte-wise
 
-##### debug functions
+### debug functions
 There is also a couple of quick and dirty functions to visualize the memory blocks being allocated on the heap:
   - `void printHeap(void*)` - given valid `Header` prints all allocated blocks of memory that reside in the heap bounds
   - `void printBlock(void*)` - given valid `Header` pointer prints the block of memory
